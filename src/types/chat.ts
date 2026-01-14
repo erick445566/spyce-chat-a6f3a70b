@@ -17,10 +17,24 @@ export type MessageUpdate = TablesUpdate<"messages">;
 export type MessageRead = Tables<"message_reads">;
 export type MessageReadInsert = TablesInsert<"message_reads">;
 
+export type Community = Tables<"communities">;
+export type CommunityInsert = TablesInsert<"communities">;
+export type CommunityUpdate = TablesUpdate<"communities">;
+
+export type CommunityMember = Tables<"community_members">;
+export type CommunityMemberInsert = TablesInsert<"community_members">;
+
+export type AppRole = 'admin' | 'moderator' | 'member';
+
 export interface ConversationWithDetails extends Conversation {
   participants: (ConversationParticipant & { profile: Profile })[];
   lastMessage?: Message;
   unreadCount?: number;
+}
+
+export interface CommunityWithDetails extends Community {
+  members: (CommunityMember & { profile: Profile })[];
+  memberCount?: number;
 }
 
 export interface MessageWithSender extends Message {

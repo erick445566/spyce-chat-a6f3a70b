@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Search, 
   Plus, 
@@ -9,6 +9,7 @@ import {
   X,
   UserPlus,
   Loader2,
+  UsersRound,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,8 @@ import { useConversations, useCreateConversation } from "@/hooks/useChat";
 import { useSearchUsers, useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { ConversationWithDetails, Profile } from "@/types/chat";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import CreateGroupModal from "./CreateGroupModal";
+import CommunitiesView from "./CommunitiesView";
 
 interface ChatListProps {
   onSelectChat: (conversationId: string) => void;
@@ -37,6 +38,8 @@ const ChatListView = ({
 }: ChatListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showCommunities, setShowCommunities] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   
   const { user } = useAuth();
@@ -216,6 +219,40 @@ const ChatListView = ({
             <h2 className="text-lg font-semibold">Nova conversa</h2>
           </div>
           
+          {/* Quick Actions */}
+          <div className="p-4 border-b border-border space-y-2">
+            <button
+              onClick={() => {
+                setShowNewChat(false);
+                setShowCreateGroup(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-secondary transition-colors"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
+                <Users className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold">Novo Grupo</p>
+                <p className="text-sm text-muted-foreground">Crie um grupo com seus contatos</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setShowNewChat(false);
+                setShowCommunities(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-secondary transition-colors"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
+                <UsersRound className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold">Comunidades</p>
+                <p className="text-sm text-muted-foreground">Explore ou crie comunidades</p>
+              </div>
+            </button>
+          </div>
+
           <div className="p-4">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -224,7 +261,6 @@ const ChatListView = ({
                 value={userSearchQuery}
                 onChange={(e) => setUserSearchQuery(e.target.value)}
                 className="pl-12 bg-secondary border-0"
-                autoFocus
               />
             </div>
           </div>
@@ -260,6 +296,24 @@ const ChatListView = ({
               ))
             )}
           </div>
+        </div>
+      )}
+
+      {/* Create Group Modal */}
+      {showCreateGroup && (
+        <CreateGroupModal
+          onClose={() => setShowCreateGroup(false)}
+          onSuccess={(conversationId) => {
+            setShowCreateGroup(false);
+            onSelectChat(conversationId);
+          }}
+        />
+      )}
+
+      {/* Communities View */}
+      {showCommunities && (
+        <div className="absolute inset-0 z-50">
+          <CommunitiesView onBack={() => setShowCommunities(false)} />
         </div>
       )}
     </div>
