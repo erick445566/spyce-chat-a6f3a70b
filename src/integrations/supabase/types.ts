@@ -14,12 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      communities: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          is_muted: boolean | null
+          joined_at: string
+          muted_until: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          is_muted?: boolean | null
+          joined_at?: string
+          muted_until?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          is_muted?: boolean | null
+          joined_at?: string
+          muted_until?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
           id: string
           is_muted: boolean | null
           joined_at: string
+          muted_until: string | null
           role: string | null
           user_id: string
         }
@@ -28,6 +115,7 @@ export type Database = {
           id?: string
           is_muted?: boolean | null
           joined_at?: string
+          muted_until?: string | null
           role?: string | null
           user_id: string
         }
@@ -36,6 +124,7 @@ export type Database = {
           id?: string
           is_muted?: boolean | null
           joined_at?: string
+          muted_until?: string | null
           role?: string | null
           user_id?: string
         }
@@ -59,32 +148,51 @@ export type Database = {
       conversations: {
         Row: {
           avatar_url: string | null
+          community_id: string | null
+          conversation_type: string | null
           created_at: string
           created_by: string | null
+          description: string | null
           id: string
           is_group: boolean | null
+          is_public: boolean | null
           name: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          community_id?: string | null
+          conversation_type?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_group?: boolean | null
+          is_public?: boolean | null
           name?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          community_id?: string | null
+          conversation_type?: string | null
           created_at?: string
           created_by?: string | null
+          description?: string | null
           id?: string
           is_group?: boolean | null
+          is_public?: boolean | null
           name?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_created_by_fkey"
             columns: ["created_by"]
@@ -232,15 +340,49 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_community_role: {
+        Args: { _community_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_participant_role: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: string
+      }
+      is_community_member: {
+        Args: { _community_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "member"
+      conversation_type: "private" | "group" | "community"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -367,6 +509,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "member"],
+      conversation_type: ["private", "group", "community"],
+    },
   },
 } as const
