@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import EditProfileModal from "@/components/EditProfileModal";
 import ThemePickerModal from "@/components/ThemePickerModal";
 import BiometricLockModal from "@/components/BiometricLockModal";
+import HelpCenterModal from "@/components/HelpCenterModal";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -40,6 +41,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [themePickerOpen, setThemePickerOpen] = useState(false);
   const [biometricModalOpen, setBiometricModalOpen] = useState(false);
+  const [helpCenterOpen, setHelpCenterOpen] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -213,6 +215,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
               icon={<HelpCircle className="w-5 h-5" />}
               title="Central de ajuda"
               description="Perguntas frequentes e suporte"
+              onClick={() => setHelpCenterOpen(true)}
             />
           </SettingsGroup>
 
@@ -245,6 +248,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
         title="Tema Global"
       />
       <BiometricLockModal open={biometricModalOpen} onOpenChange={setBiometricModalOpen} />
+      <HelpCenterModal open={helpCenterOpen} onOpenChange={setHelpCenterOpen} />
     </div>
   );
 };
