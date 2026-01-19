@@ -13,12 +13,16 @@ import {
   EyeOff,
   Smartphone,
   Loader2,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
+import EditProfileModal from "@/components/EditProfileModal";
+import ThemePickerModal from "@/components/ThemePickerModal";
+import BiometricLockModal from "@/components/BiometricLockModal";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -33,6 +37,9 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
   const { toast } = useToast();
 
   const [loggingOut, setLoggingOut] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
+  const [biometricModalOpen, setBiometricModalOpen] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -57,6 +64,22 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
         variant: "destructive",
         title: "Erro",
         description: "Não foi possível atualizar a configuração.",
+      });
+    }
+  };
+
+  const handleThemeSelect = async (color: string | null) => {
+    try {
+      await updateProfile.mutateAsync({ theme_primary_color: color });
+      toast({
+        title: "Tema atualizado",
+        description: "Seu tema foi alterado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível alterar o tema.",
       });
     }
   };
@@ -89,18 +112,34 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
       <div className="flex-1 overflow-y-auto">
         {/* Profile Section */}
         <div className="p-4">
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border">
-            <div className="w-16 h-16 rounded-2xl spyce-gradient flex items-center justify-center text-white text-2xl font-bold">
-              {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || "U"}
+          <button
+            onClick={() => setEditProfileOpen(true)}
+            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:bg-accent/50 transition-colors text-left"
+          >
+            <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full spyce-gradient flex items-center justify-center text-white text-2xl font-bold">
+                  {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || "U"}
+                </div>
+              )}
             </div>
-            <div className="flex-1">
-              <h2 className="font-semibold text-lg">
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-lg truncate">
                 {profile?.display_name || profile?.username || "Usuário"}
               </h2>
-              <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+              <p className="text-sm text-muted-foreground truncate">@{profile?.username}</p>
+              {profile?.bio && (
+                <p className="text-sm text-muted-foreground truncate mt-1">{profile.bio}</p>
+              )}
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          </button>
         </div>
 
         {/* Settings Groups */}
@@ -118,6 +157,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
               icon={<Palette className="w-5 h-5" />}
               title="Tema personalizado"
               description="Escolha suas cores favoritas"
+              onClick={() => setThemePickerOpen(true)}
             />
           </SettingsGroup>
 
@@ -142,7 +182,8 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
             <SettingsItem
               icon={<Smartphone className="w-5 h-5" />}
               title="Bloqueio por biometria"
-              description="Use impressão digital ou Face ID"
+              description={profile?.biometric_enabled ? "Ativado" : "Use impressão digital ou Face ID"}
+              onClick={() => setBiometricModalOpen(true)}
             />
           </SettingsGroup>
 
@@ -193,6 +234,17 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <EditProfileModal open={editProfileOpen} onOpenChange={setEditProfileOpen} />
+      <ThemePickerModal
+        open={themePickerOpen}
+        onOpenChange={setThemePickerOpen}
+        currentColor={profile?.theme_primary_color || null}
+        onSelectColor={handleThemeSelect}
+        title="Tema Global"
+      />
+      <BiometricLockModal open={biometricModalOpen} onOpenChange={setBiometricModalOpen} />
     </div>
   );
 };

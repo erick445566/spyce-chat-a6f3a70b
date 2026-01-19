@@ -246,3 +246,33 @@ export const useCreateConversation = () => {
     },
   });
 };
+
+export const useUpdateConversationTheme = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ 
+      conversationId,
+      themeColor
+    }: { 
+      conversationId: string;
+      themeColor: string | null;
+    }) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("conversations")
+        .update({ theme_color: themeColor })
+        .eq("id", conversationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+};

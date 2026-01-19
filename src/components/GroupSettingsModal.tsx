@@ -13,7 +13,8 @@ import {
   Check,
   Loader2,
   ShieldCheck,
-  User
+  User,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,21 +35,27 @@ import {
   useMuteMember
 } from "@/hooks/useGroups";
 import { useSearchUsers } from "@/hooks/useProfile";
+import { useUpdateConversationTheme } from "@/hooks/useChat";
 import { Profile } from "@/types/chat";
 import { cn } from "@/lib/utils";
 import { addDays, addHours } from "date-fns";
+import ThemePickerModal from "./ThemePickerModal";
+import { useToast } from "@/hooks/use-toast";
 
 interface GroupSettingsModalProps {
   conversationId: string;
   groupName: string;
+  themeColor?: string | null;
   onClose: () => void;
 }
 
-const GroupSettingsModal = ({ conversationId, groupName, onClose }: GroupSettingsModalProps) => {
+const GroupSettingsModal = ({ conversationId, groupName, themeColor, onClose }: GroupSettingsModalProps) => {
   const [view, setView] = useState<"main" | "add-member">("main");
   const [searchQuery, setSearchQuery] = useState("");
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
   
   const { user } = useAuth();
+  const { toast } = useToast();
   const { data: members = [], isLoading: loadingMembers } = useGroupMembers(conversationId);
   const { data: userRole } = useUserGroupRole(conversationId);
   const { data: searchResults = [], isLoading: searchingUsers } = useSearchUsers(searchQuery);
@@ -57,9 +64,29 @@ const GroupSettingsModal = ({ conversationId, groupName, onClose }: GroupSetting
   const removeMember = useRemoveGroupMember();
   const updateRole = useUpdateMemberRole();
   const muteMember = useMuteMember();
+  const updateTheme = useUpdateConversationTheme();
 
   const isAdmin = userRole === "admin";
   const isModerator = userRole === "moderator" || isAdmin;
+
+  const handleThemeSelect = async (color: string | null) => {
+    try {
+      await updateTheme.mutateAsync({
+        conversationId,
+        themeColor: color,
+      });
+      toast({
+        title: "Tema atualizado",
+        description: "O tema do grupo foi alterado.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível alterar o tema.",
+      });
+    }
+  };
 
   const existingMemberIds = members.map((m) => m.user_id);
   const filteredSearchResults = searchResults.filter(
@@ -229,8 +256,8 @@ const GroupSettingsModal = ({ conversationId, groupName, onClose }: GroupSetting
       </div>
 
       {/* Actions */}
-      {isModerator && (
-        <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border space-y-2">
+        {isModerator && (
           <Button
             variant="outline"
             className="w-full gap-2"
@@ -239,8 +266,16 @@ const GroupSettingsModal = ({ conversationId, groupName, onClose }: GroupSetting
             <UserPlus className="w-4 h-4" />
             Adicionar Membro
           </Button>
-        </div>
-      )}
+        )}
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => setThemePickerOpen(true)}
+        >
+          <Palette className="w-4 h-4" />
+          Personalizar Tema
+        </Button>
+      </div>
 
       {/* Members List */}
       <div className="flex-1 overflow-y-auto">
@@ -351,6 +386,15 @@ const GroupSettingsModal = ({ conversationId, groupName, onClose }: GroupSetting
           </div>
         )}
       </div>
+
+      {/* Theme Picker Modal */}
+      <ThemePickerModal
+        open={themePickerOpen}
+        onOpenChange={setThemePickerOpen}
+        currentColor={themeColor || null}
+        onSelectColor={handleThemeSelect}
+        title="Tema do Grupo"
+      />
     </div>
   );
 };
