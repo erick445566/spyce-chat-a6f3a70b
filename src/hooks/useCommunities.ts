@@ -411,13 +411,15 @@ export const useUpdateCommunity = () => {
       name,
       description,
       avatarUrl,
-      isPublic
+      isPublic,
+      themeColor
     }: { 
       communityId: string;
       name?: string;
       description?: string;
       avatarUrl?: string;
       isPublic?: boolean;
+      themeColor?: string | null;
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
@@ -426,6 +428,7 @@ export const useUpdateCommunity = () => {
       if (description !== undefined) updateData.description = description;
       if (avatarUrl !== undefined) updateData.avatar_url = avatarUrl;
       if (isPublic !== undefined) updateData.is_public = isPublic;
+      if (themeColor !== undefined) updateData.theme_color = themeColor;
 
       const { data, error } = await supabase
         .from("communities")

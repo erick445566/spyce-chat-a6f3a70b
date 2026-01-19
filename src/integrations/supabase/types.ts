@@ -23,6 +23,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           name: string
+          theme_color: string | null
           updated_at: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           name: string
+          theme_color?: string | null
           updated_at?: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           name?: string
+          theme_color?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -157,6 +160,7 @@ export type Database = {
           is_group: boolean | null
           is_public: boolean | null
           name: string | null
+          theme_color: string | null
           updated_at: string
         }
         Insert: {
@@ -170,6 +174,7 @@ export type Database = {
           is_group?: boolean | null
           is_public?: boolean | null
           name?: string | null
+          theme_color?: string | null
           updated_at?: string
         }
         Update: {
@@ -183,6 +188,7 @@ export type Database = {
           is_group?: boolean | null
           is_public?: boolean | null
           name?: string | null
+          theme_color?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -302,6 +308,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          biometric_enabled: boolean | null
           created_at: string
           display_name: string | null
           hide_online_status: boolean | null
@@ -309,12 +316,14 @@ export type Database = {
           id: string
           is_online: boolean | null
           last_seen: string | null
+          theme_primary_color: string | null
           updated_at: string
           username: string
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          biometric_enabled?: boolean | null
           created_at?: string
           display_name?: string | null
           hide_online_status?: boolean | null
@@ -322,12 +331,14 @@ export type Database = {
           id: string
           is_online?: boolean | null
           last_seen?: string | null
+          theme_primary_color?: string | null
           updated_at?: string
           username: string
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          biometric_enabled?: boolean | null
           created_at?: string
           display_name?: string | null
           hide_online_status?: boolean | null
@@ -335,6 +346,7 @@ export type Database = {
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
+          theme_primary_color?: string | null
           updated_at?: string
           username?: string
         }
