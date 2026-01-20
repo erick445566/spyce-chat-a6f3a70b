@@ -195,6 +195,51 @@ export const useSendMessage = () => {
   });
 };
 
+export const useFindExistingConversation = () => {
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (otherUserId: string) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      // Find all private conversations (non-group) where both users are participants
+      const { data: myConversations, error: myError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", user.id);
+
+      if (myError) throw myError;
+      if (!myConversations || myConversations.length === 0) return null;
+
+      const myConvIds = myConversations.map(c => c.conversation_id);
+
+      // Check if the other user is in any of these conversations
+      const { data: sharedConversations, error: sharedError } = await supabase
+        .from("conversation_participants")
+        .select("conversation_id")
+        .eq("user_id", otherUserId)
+        .in("conversation_id", myConvIds);
+
+      if (sharedError) throw sharedError;
+      if (!sharedConversations || sharedConversations.length === 0) return null;
+
+      // Get the conversation details to find a private (non-group) one
+      const sharedConvIds = sharedConversations.map(c => c.conversation_id);
+      
+      const { data: conversations, error: convError } = await supabase
+        .from("conversations")
+        .select("*")
+        .in("id", sharedConvIds)
+        .eq("is_group", false)
+        .limit(1)
+        .maybeSingle();
+
+      if (convError) throw convError;
+      return conversations;
+    },
+  });
+};
+
 export const useCreateConversation = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -210,6 +255,43 @@ export const useCreateConversation = () => {
       isGroup?: boolean;
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
+
+      // For private chats (not groups), check if conversation already exists
+      if (!isGroup && participantIds.length === 1) {
+        const otherUserId = participantIds[0];
+        
+        // Find all private conversations where both users are participants
+        const { data: myConversations } = await supabase
+          .from("conversation_participants")
+          .select("conversation_id")
+          .eq("user_id", user.id);
+
+        if (myConversations && myConversations.length > 0) {
+          const myConvIds = myConversations.map(c => c.conversation_id);
+
+          const { data: sharedConversations } = await supabase
+            .from("conversation_participants")
+            .select("conversation_id")
+            .eq("user_id", otherUserId)
+            .in("conversation_id", myConvIds);
+
+          if (sharedConversations && sharedConversations.length > 0) {
+            const sharedConvIds = sharedConversations.map(c => c.conversation_id);
+            
+            const { data: existingConv } = await supabase
+              .from("conversations")
+              .select("*")
+              .in("id", sharedConvIds)
+              .eq("is_group", false)
+              .limit(1)
+              .maybeSingle();
+
+            if (existingConv) {
+              return existingConv;
+            }
+          }
+        }
+      }
 
       // Create the conversation
       const { data: conversation, error: convError } = await supabase
@@ -230,7 +312,7 @@ export const useCreateConversation = () => {
       const { error: partError } = await supabase
         .from("conversation_participants")
         .insert(
-          allParticipantIds.map((id, index) => ({
+          allParticipantIds.map((id) => ({
             conversation_id: conversation.id,
             user_id: id,
             role: id === user.id ? "admin" : "member",
