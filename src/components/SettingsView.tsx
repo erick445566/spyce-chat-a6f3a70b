@@ -14,6 +14,7 @@ import {
   Smartphone,
   Loader2,
   User,
+  Headphones,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -24,6 +25,8 @@ import EditProfileModal from "@/components/EditProfileModal";
 import ThemePickerModal from "@/components/ThemePickerModal";
 import BiometricLockModal from "@/components/BiometricLockModal";
 import HelpCenterModal from "@/components/HelpCenterModal";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
+import SupportTicketsModal from "@/components/SupportTicketsModal";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -42,6 +45,8 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
   const [themePickerOpen, setThemePickerOpen] = useState(false);
   const [biometricModalOpen, setBiometricModalOpen] = useState(false);
   const [helpCenterOpen, setHelpCenterOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [supportTicketsOpen, setSupportTicketsOpen] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -206,6 +211,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
               icon={<Lock className="w-5 h-5" />}
               title="Alterar senha"
               description="Atualize sua senha de acesso"
+              onClick={() => setChangePasswordOpen(true)}
             />
           </SettingsGroup>
 
@@ -214,8 +220,14 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
             <SettingsItem
               icon={<HelpCircle className="w-5 h-5" />}
               title="Central de ajuda"
-              description="Perguntas frequentes e suporte"
+              description="Perguntas frequentes"
               onClick={() => setHelpCenterOpen(true)}
+            />
+            <SettingsItem
+              icon={<Headphones className="w-5 h-5" />}
+              title="Suporte com IA"
+              description="Chat com SpyceAI e histórico de tickets"
+              onClick={() => setSupportTicketsOpen(true)}
             />
           </SettingsGroup>
 
@@ -249,6 +261,8 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
       />
       <BiometricLockModal open={biometricModalOpen} onOpenChange={setBiometricModalOpen} />
       <HelpCenterModal open={helpCenterOpen} onOpenChange={setHelpCenterOpen} />
+      <ChangePasswordModal open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
+      <SupportTicketsModal open={supportTicketsOpen} onOpenChange={setSupportTicketsOpen} />
     </div>
   );
 };
