@@ -22,9 +22,10 @@ import CommunitySettingsModal from "./CommunitySettingsModal";
 
 interface CommunitiesViewProps {
   onBack: () => void;
+  onSelectGroup?: (conversationId: string) => void;
 }
 
-const CommunitiesView = ({ onBack }: CommunitiesViewProps) => {
+const CommunitiesView = ({ onBack, onSelectGroup }: CommunitiesViewProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateCommunity, setShowCreateCommunity] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -50,11 +51,20 @@ const CommunitiesView = ({ onBack }: CommunitiesViewProps) => {
     }
   };
 
+  const handleSelectGroup = (conversationId: string) => {
+    setSelectedCommunity(null);
+    onBack();
+    if (onSelectGroup) {
+      setTimeout(() => onSelectGroup(conversationId), 100);
+    }
+  };
+
   if (selectedCommunity) {
     return (
       <CommunitySettingsModal
         community={selectedCommunity}
         onClose={() => setSelectedCommunity(null)}
+        onSelectGroup={handleSelectGroup}
       />
     );
   }

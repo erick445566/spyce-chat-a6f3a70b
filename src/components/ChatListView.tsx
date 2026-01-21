@@ -88,9 +88,15 @@ const ChatListView = ({
         participantIds: [targetUser.id],
         isGroup: false,
       });
-      setShowNewChat(false);
-      setUserSearchQuery("");
-      onSelectChat(result.id);
+      
+      if (result && result.id) {
+        setShowNewChat(false);
+        setUserSearchQuery("");
+        // Small delay to ensure state updates before navigation
+        setTimeout(() => {
+          onSelectChat(result.id);
+        }, 100);
+      }
     } catch (error) {
       console.error("Error creating conversation:", error);
     }
@@ -313,7 +319,13 @@ const ChatListView = ({
       {/* Communities View */}
       {showCommunities && (
         <div className="absolute inset-0 z-50">
-          <CommunitiesView onBack={() => setShowCommunities(false)} />
+          <CommunitiesView 
+            onBack={() => setShowCommunities(false)} 
+            onSelectGroup={(conversationId) => {
+              setShowCommunities(false);
+              onSelectChat(conversationId);
+            }}
+          />
         </div>
       )}
     </div>

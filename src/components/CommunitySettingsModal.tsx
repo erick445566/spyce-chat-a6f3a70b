@@ -15,10 +15,14 @@ import {
   ShieldCheck,
   LogOut,
   Trash2,
-  Settings
+  Settings,
+  Users,
+  Plus,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   useCommunityMembers, 
@@ -45,7 +50,9 @@ import {
   useUpdateCommunityMemberRole,
   useMuteCommunityMember,
   useLeaveCommunity,
-  useDeleteCommunity
+  useDeleteCommunity,
+  useCommunityGroups,
+  useCreateCommunityGroup
 } from "@/hooks/useCommunities";
 import { useSearchUsers } from "@/hooks/useProfile";
 import { CommunityWithDetails, Profile, AppRole } from "@/types/chat";
@@ -54,16 +61,21 @@ import { addDays, addHours } from "date-fns";
 interface CommunitySettingsModalProps {
   community: CommunityWithDetails;
   onClose: () => void;
+  onSelectGroup?: (conversationId: string) => void;
 }
 
-const CommunitySettingsModal = ({ community, onClose }: CommunitySettingsModalProps) => {
-  const [view, setView] = useState<"main" | "add-member">("main");
+const CommunitySettingsModal = ({ community, onClose, onSelectGroup }: CommunitySettingsModalProps) => {
+  const [view, setView] = useState<"main" | "add-member" | "create-group">("main");
   const [searchQuery, setSearchQuery] = useState("");
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDescription, setNewGroupDescription] = useState("");
   
+  const { toast } = useToast();
   const { user } = useAuth();
   const { data: members = [], isLoading: loadingMembers } = useCommunityMembers(community.id);
+  const { data: groups = [], isLoading: loadingGroups } = useCommunityGroups(community.id);
   const { data: userRole } = useUserCommunityRole(community.id);
   const { data: searchResults = [], isLoading: searchingUsers } = useSearchUsers(searchQuery);
   
@@ -73,6 +85,7 @@ const CommunitySettingsModal = ({ community, onClose }: CommunitySettingsModalPr
   const muteMember = useMuteCommunityMember();
   const leaveCommunity = useLeaveCommunity();
   const deleteCommunity = useDeleteCommunity();
+  const createGroup = useCreateCommunityGroup();
 
   const isAdmin = userRole === "admin";
   const isModerator = userRole === "moderator" || isAdmin;
@@ -166,6 +179,38 @@ const CommunitySettingsModal = ({ community, onClose }: CommunitySettingsModalPr
     }
   };
 
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) return;
+
+    try {
+      const group = await createGroup.mutateAsync({
+        communityId: community.id,
+        name: newGroupName.trim(),
+        description: newGroupDescription.trim() || undefined,
+      });
+      
+      toast({
+        title: "Grupo criado!",
+        description: `O grupo "${newGroupName}" foi criado com sucesso.`,
+      });
+      
+      setNewGroupName("");
+      setNewGroupDescription("");
+      setView("main");
+      
+      // If callback provided, navigate to the group
+      if (onSelectGroup && group) {
+        onSelectGroup(group.id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar grupo",
+        description: error.message || "Não foi possível criar o grupo.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getRoleIcon = (role: string | null) => {
     switch (role) {
       case "admin":
@@ -176,6 +221,79 @@ const CommunitySettingsModal = ({ community, onClose }: CommunitySettingsModalPr
         return null;
     }
   };
+
+  if (view === "create-group") {
+    return (
+      <div className="h-full flex flex-col bg-background">
+        <div className="p-4 border-b border-border flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setView("main");
+              setNewGroupName("");
+              setNewGroupDescription("");
+            }}
+            className="rounded-xl"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+          <h2 className="text-lg font-semibold flex-1">Novo Grupo</h2>
+          {newGroupName.trim() && (
+            <Button
+              variant="ghost"
+              onClick={handleCreateGroup}
+              disabled={createGroup.isPending}
+              className="text-primary"
+            >
+              {createGroup.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Criar"
+              )}
+            </Button>
+          )}
+        </div>
+
+        <div className="flex-1 p-4 space-y-4">
+          <div className="flex justify-center">
+            <div className="w-24 h-24 rounded-2xl bg-secondary flex items-center justify-center">
+              <Users className="w-10 h-10 text-muted-foreground" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Nome do Grupo</label>
+            <Input
+              placeholder="Digite o nome do grupo"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              className="bg-secondary border-0"
+              maxLength={50}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Descrição (opcional)</label>
+            <Textarea
+              placeholder="Descreva o propósito do grupo"
+              value={newGroupDescription}
+              onChange={(e) => setNewGroupDescription(e.target.value)}
+              className="bg-secondary border-0 resize-none"
+              rows={3}
+              maxLength={500}
+            />
+          </div>
+
+          <div className="p-4 bg-secondary/50 rounded-2xl">
+            <p className="text-sm text-muted-foreground">
+              <strong>{groups.length}/50</strong> grupos nesta comunidade
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (view === "add-member") {
     return (
@@ -266,7 +384,71 @@ const CommunitySettingsModal = ({ community, onClose }: CommunitySettingsModalPr
         {community.description && (
           <p className="text-sm text-muted-foreground text-center mt-1">{community.description}</p>
         )}
-        <p className="text-sm text-muted-foreground mt-2">{members.length} membros</p>
+        <p className="text-sm text-muted-foreground mt-2">{members.length} membros · {groups.length}/50 grupos</p>
+      </div>
+
+      {/* Groups Section */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-medium text-muted-foreground">Grupos ({groups.length}/50)</h4>
+          {isModerator && groups.length < 50 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setView("create-group")}
+              className="gap-1 h-8"
+            >
+              <Plus className="w-4 h-4" />
+              Novo
+            </Button>
+          )}
+        </div>
+        
+        {loadingGroups ? (
+          <div className="flex items-center justify-center h-16">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : groups.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-muted-foreground mb-2">Nenhum grupo ainda</p>
+            {isModerator && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setView("create-group")}
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Criar primeiro grupo
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {groups.slice(0, 5).map((group) => (
+              <button
+                key={group.id}
+                onClick={() => onSelectGroup?.(group.id)}
+                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-secondary transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-sm">{group.name}</p>
+                  {group.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">{group.description}</p>
+                  )}
+                </div>
+              </button>
+            ))}
+            {groups.length > 5 && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                +{groups.length - 5} outros grupos
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Actions */}
