@@ -506,16 +506,13 @@ export const useCreateCommunityGroup = () => {
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
-      // Check current group count (limit of 50)
-      const { data: existingGroups, error: countError } = await supabase
-        .from("conversations")
-        .select("id")
-        .eq("community_id", communityId)
-        .eq("conversation_type", "community");
+      // Check current group count using the security definer function (limit of 50)
+      const { data: groupCount, error: countError } = await supabase
+        .rpc('count_community_groups', { p_community_id: communityId });
 
       if (countError) throw countError;
 
-      if (existingGroups && existingGroups.length >= 50) {
+      if (groupCount && groupCount >= 50) {
         throw new Error("Esta comunidade atingiu o limite máximo de 50 grupos");
       }
 
@@ -536,16 +533,28 @@ export const useCreateCommunityGroup = () => {
 
       if (groupError) throw groupError;
 
-      // Add creator as participant with admin role
-      const { error: partError } = await supabase
-        .from("conversation_participants")
-        .insert({
-          conversation_id: group.id,
-          user_id: user.id,
-          role: 'admin',
-        });
+      // Get all community members to add them to the group
+      const { data: communityMembers, error: membersError } = await supabase
+        .from("community_members")
+        .select("user_id")
+        .eq("community_id", communityId);
 
-      if (partError) throw partError;
+      if (membersError) throw membersError;
+
+      // Add all community members as participants in the group
+      const participants = (communityMembers || []).map((member) => ({
+        conversation_id: group.id,
+        user_id: member.user_id,
+        role: member.user_id === user.id ? 'admin' : 'member',
+      }));
+
+      if (participants.length > 0) {
+        const { error: partError } = await supabase
+          .from("conversation_participants")
+          .insert(participants);
+
+        if (partError) throw partError;
+      }
 
       return group;
     },

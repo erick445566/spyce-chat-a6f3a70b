@@ -437,6 +437,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_community_groups: {
+        Args: { p_community_id: string }
+        Returns: number
+      }
       get_community_role: {
         Args: { _community_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
