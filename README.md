@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# Spyce Chat
 
-## Project info
+Aplicativo de mensagens moderno, seguro e privado.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Sobre
 
 ## How can I edit this code?
 
