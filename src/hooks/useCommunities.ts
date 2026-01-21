@@ -466,3 +466,92 @@ export const useDeleteCommunity = () => {
     },
   });
 };
+
+export const useCommunityGroups = (communityId: string | null) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["community-groups", communityId],
+    queryFn: async () => {
+      if (!communityId) return [];
+
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq("community_id", communityId)
+        .eq("conversation_type", "community");
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!communityId && !!user?.id,
+  });
+};
+
+export const useCreateCommunityGroup = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ 
+      communityId,
+      name, 
+      description,
+      avatarUrl
+    }: { 
+      communityId: string;
+      name: string;
+      description?: string;
+      avatarUrl?: string;
+    }) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      // Check current group count (limit of 50)
+      const { data: existingGroups, error: countError } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("community_id", communityId)
+        .eq("conversation_type", "community");
+
+      if (countError) throw countError;
+
+      if (existingGroups && existingGroups.length >= 50) {
+        throw new Error("Esta comunidade atingiu o limite máximo de 50 grupos");
+      }
+
+      // Create the group
+      const { data: group, error: groupError } = await supabase
+        .from("conversations")
+        .insert({
+          name,
+          description,
+          avatar_url: avatarUrl,
+          is_group: true,
+          community_id: communityId,
+          conversation_type: 'community',
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (groupError) throw groupError;
+
+      // Add creator as participant with admin role
+      const { error: partError } = await supabase
+        .from("conversation_participants")
+        .insert({
+          conversation_id: group.id,
+          user_id: user.id,
+          role: 'admin',
+        });
+
+      if (partError) throw partError;
+
+      return group;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["community-groups", variables.communityId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+};
