@@ -83,6 +83,8 @@ const ChatListView = ({
   };
 
   const handleStartConversation = async (targetUser: Profile) => {
+    if (createConversation.isPending) return;
+    
     try {
       const result = await createConversation.mutateAsync({
         participantIds: [targetUser.id],
@@ -90,12 +92,11 @@ const ChatListView = ({
       });
       
       if (result && result.id) {
+        // Close modal immediately
         setShowNewChat(false);
         setUserSearchQuery("");
-        // Small delay to ensure state updates before navigation
-        setTimeout(() => {
-          onSelectChat(result.id);
-        }, 100);
+        // Navigate to the conversation
+        onSelectChat(result.id);
       }
     } catch (error) {
       console.error("Error creating conversation:", error);

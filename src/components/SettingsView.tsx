@@ -32,9 +32,11 @@ interface SettingsViewProps {
   onBack: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  forceMobile?: boolean;
+  onToggleForceMobile?: () => void;
 }
 
-const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProps) => {
+const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode, forceMobile, onToggleForceMobile }: SettingsViewProps) => {
   const { signOut } = useAuth();
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
@@ -166,6 +168,15 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode }: SettingsViewProp
               description="Escolha suas cores favoritas"
               onClick={() => setThemePickerOpen(true)}
             />
+            {onToggleForceMobile && (
+              <SettingsToggle
+                icon={<Smartphone className="w-5 h-5" />}
+                title="Layout mobile no desktop"
+                description="Usar sempre o layout de celular"
+                checked={forceMobile || false}
+                onCheckedChange={onToggleForceMobile}
+              />
+            )}
           </SettingsGroup>
 
           {/* Privacy */}

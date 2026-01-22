@@ -21,6 +21,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          invite_code: string | null
           is_public: boolean | null
           name: string
           theme_color: string | null
@@ -32,6 +33,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          invite_code?: string | null
           is_public?: boolean | null
           name: string
           theme_color?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          invite_code?: string | null
           is_public?: boolean | null
           name?: string
           theme_color?: string | null
@@ -157,6 +160,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          invite_code: string | null
           is_group: boolean | null
           is_public: boolean | null
           name: string | null
@@ -171,6 +175,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          invite_code?: string | null
           is_group?: boolean | null
           is_public?: boolean | null
           name?: string | null
@@ -185,6 +190,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          invite_code?: string | null
           is_group?: boolean | null
           is_public?: boolean | null
           name?: string | null
@@ -441,6 +447,7 @@ export type Database = {
         Args: { p_community_id: string }
         Returns: number
       }
+      generate_invite_code: { Args: never; Returns: string }
       get_community_role: {
         Args: { _community_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -457,6 +464,11 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      join_community_by_invite: {
+        Args: { p_invite_code: string }
+        Returns: string
+      }
+      join_group_by_invite: { Args: { p_invite_code: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "member"
