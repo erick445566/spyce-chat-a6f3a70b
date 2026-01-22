@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { useAuth, AuthProvider } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import AuthScreen from "@/components/AuthScreen";
 import ChatListView from "@/components/ChatListView";
 import ConversationView from "@/components/ConversationView";
 import SettingsView from "@/components/SettingsView";
 import { Loader2, Flame } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type View = "chats" | "chat" | "settings";
 
@@ -28,11 +30,39 @@ const useDarkMode = () => {
   return { isDarkMode, toggleDarkMode };
 };
 
+const useForceMobileLayout = () => {
+  const [forceMobile, setForceMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("spyce-force-mobile") === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("spyce-force-mobile", String(forceMobile));
+  }, [forceMobile]);
+
+  const toggleForceMobile = () => setForceMobile((prev) => !prev);
+
+  return { forceMobile, toggleForceMobile };
+};
+
 const MainApp = () => {
   const { user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { forceMobile, toggleForceMobile } = useForceMobileLayout();
   const [view, setView] = useState<View>("chats");
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+
+  // Handle chat param from invite redirect
+  useEffect(() => {
+    const chatId = searchParams.get("chat");
+    if (chatId) {
+      setSelectedConversationId(chatId);
+      setView("chat");
+    }
+  }, [searchParams]);
 
   const handleSelectChat = (conversationId: string) => {
     setSelectedConversationId(conversationId);
@@ -63,10 +93,13 @@ const MainApp = () => {
     return <AuthScreen />;
   }
 
+  // Use mobile layout on small screens OR when force mobile is enabled
+  const useMobileLayout = forceMobile;
+
   return (
     <div className="h-screen w-full overflow-hidden">
-      {/* Mobile Layout */}
-      <div className="h-full md:hidden">
+      {/* Mobile/Forced Mobile Layout */}
+      <div className={cn("h-full", useMobileLayout ? "block" : "md:hidden")}>
         {view === "chats" && (
           <ChatListView
             onSelectChat={handleSelectChat}
@@ -87,43 +120,49 @@ const MainApp = () => {
             onBack={handleBack}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
+            forceMobile={forceMobile}
+            onToggleForceMobile={toggleForceMobile}
           />
         )}
       </div>
 
-      {/* Desktop Layout */}
-      <div className="hidden md:flex h-full">
-        {/* Sidebar */}
-        <div className="w-96 border-r border-border relative">
-          {view === "settings" ? (
-            <SettingsView
-              onBack={() => setView("chats")}
-              isDarkMode={isDarkMode}
-              onToggleDarkMode={toggleDarkMode}
-            />
-          ) : (
-            <ChatListView
-              onSelectChat={handleSelectChat}
-              selectedChatId={selectedConversationId || undefined}
-              onOpenSettings={handleOpenSettings}
-              isDarkMode={isDarkMode}
-              onToggleDarkMode={toggleDarkMode}
-            />
-          )}
-        </div>
+      {/* Desktop Layout (only when not forcing mobile) */}
+      {!useMobileLayout && (
+        <div className="hidden md:flex h-full">
+          {/* Sidebar */}
+          <div className="w-96 border-r border-border relative">
+            {view === "settings" ? (
+              <SettingsView
+                onBack={() => setView("chats")}
+                isDarkMode={isDarkMode}
+                onToggleDarkMode={toggleDarkMode}
+                forceMobile={forceMobile}
+                onToggleForceMobile={toggleForceMobile}
+              />
+            ) : (
+              <ChatListView
+                onSelectChat={handleSelectChat}
+                selectedChatId={selectedConversationId || undefined}
+                onOpenSettings={handleOpenSettings}
+                isDarkMode={isDarkMode}
+                onToggleDarkMode={toggleDarkMode}
+              />
+            )}
+          </div>
 
-        {/* Main Content */}
-        <div className="flex-1">
-          {selectedConversationId ? (
-            <ConversationView
-              conversationId={selectedConversationId}
-              onBack={handleBack}
-            />
-          ) : (
-            <EmptyState />
-          )}
+          {/* Main Content */}
+          <div className="flex-1">
+            {selectedConversationId ? (
+              <ConversationView
+                conversationId={selectedConversationId}
+                onBack={handleBack}
+              />
+            ) : (
+              <EmptyState />
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -155,11 +194,7 @@ const EmptyState = () => (
 );
 
 const Index = () => {
-  return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
-  );
+  return <MainApp />;
 };
 
 export default Index;

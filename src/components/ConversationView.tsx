@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   Phone,
@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useMessages, useSendMessage, useConversations } from "@/hooks/useChat";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { MessageWithSender, ConversationWithDetails } from "@/types/chat";
 
 interface ChatViewProps {
@@ -34,9 +36,11 @@ const ConversationView = ({ conversationId, onBack }: ChatViewProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   const { data: messages = [], isLoading: loadingMessages } = useMessages(conversationId);
   const { data: conversations = [] } = useConversations();
   const sendMessage = useSendMessage();
+  const { typingUsers, startTyping, stopTyping } = useTypingIndicator(conversationId);
 
   const conversation = conversations.find((c) => c.id === conversationId);
 
@@ -60,6 +64,7 @@ const ConversationView = ({ conversationId, onBack }: ChatViewProps) => {
     if (!newMessage.trim()) return;
 
     try {
+      await stopTyping();
       await sendMessage.mutateAsync({
         conversation_id: conversationId,
         content: newMessage.trim(),
@@ -70,6 +75,21 @@ const ConversationView = ({ conversationId, onBack }: ChatViewProps) => {
       console.error("Error sending message:", error);
     }
   };
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setNewMessage(e.target.value);
+      if (e.target.value.trim()) {
+        startTyping({
+          username: profile?.username,
+          display_name: profile?.display_name || undefined,
+        });
+      } else {
+        stopTyping();
+      }
+    },
+    [startTyping, stopTyping, profile]
+  );
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -118,7 +138,11 @@ const ConversationView = ({ conversationId, onBack }: ChatViewProps) => {
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold truncate">{getConversationName(conversation)}</h2>
           <p className="text-xs text-muted-foreground">
-            {isOnline(conversation) ? "Online" : "Offline"}
+            {typingUsers.length > 0
+              ? `${typingUsers.map((u) => u.display_name || u.username).join(", ")} ${typingUsers.length === 1 ? "está" : "estão"} digitando...`
+              : isOnline(conversation)
+              ? "Online"
+              : "Offline"}
           </p>
         </div>
 
@@ -193,8 +217,9 @@ const ConversationView = ({ conversationId, onBack }: ChatViewProps) => {
             <Input
               placeholder="Digite uma mensagem..."
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
+              onBlur={() => stopTyping()}
               className="pr-12 bg-secondary border-0"
               disabled={sendMessage.isPending}
             />
