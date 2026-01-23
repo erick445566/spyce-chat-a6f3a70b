@@ -22,7 +22,10 @@ export const useConversations = () => {
             id,
             name,
             is_group,
+            invite_code,
             avatar_url,
+            description,
+            theme_color,
             created_by,
             created_at,
             updated_at
@@ -103,7 +106,7 @@ export const useConversations = () => {
           table: "messages",
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+          queryClient.invalidateQueries({ queryKey: ["conversations"], exact: false });
         }
       )
       .subscribe();
@@ -190,7 +193,7 @@ export const useSendMessage = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["messages", data.conversation_id] });
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"], exact: false });
     },
   });
 };
@@ -324,7 +327,7 @@ export const useCreateConversation = () => {
       return conversation;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"], exact: false });
     },
   });
 };
@@ -354,7 +357,7 @@ export const useUpdateConversationTheme = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"], exact: false });
     },
   });
 };
