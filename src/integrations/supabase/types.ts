@@ -456,6 +456,13 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: string
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_community_member: {
         Args: { _community_id: string; _user_id: string }
         Returns: boolean
@@ -464,6 +471,7 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_owner: { Args: { _user_id: string }; Returns: boolean }
       join_community_by_invite: {
         Args: { p_invite_code: string }
         Returns: string
@@ -471,7 +479,7 @@ export type Database = {
       join_group_by_invite: { Args: { p_invite_code: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "member"
+      app_role: "admin" | "moderator" | "member" | "owner"
       conversation_type: "private" | "group" | "community"
     }
     CompositeTypes: {
@@ -600,7 +608,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "member"],
+      app_role: ["admin", "moderator", "member", "owner"],
       conversation_type: ["private", "group", "community"],
     },
   },
