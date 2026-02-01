@@ -10,6 +10,9 @@ import {
   UserPlus,
   Loader2,
   UsersRound,
+  Eye,
+  Megaphone,
+  Shield,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ConversationWithDetails, Profile } from "@/types/chat";
 import CreateGroupModal from "./CreateGroupModal";
 import CommunitiesView from "./CommunitiesView";
+import StatusView from "./StatusView";
+import ChannelsView from "./ChannelsView";
+import AdminPanel from "./AdminPanel";
+import { useIsOwner, useIsAdmin } from "@/hooks/useAdmin";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatListProps {
   onSelectChat: (conversationId: string) => void;
@@ -40,6 +48,9 @@ const ChatListView = ({
   const [showNewChat, setShowNewChat] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showCommunities, setShowCommunities] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const [showChannels, setShowChannels] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   
   const { user } = useAuth();
@@ -47,6 +58,9 @@ const ChatListView = ({
   const { data: conversations = [], isLoading } = useConversations();
   const { data: searchResults = [], isLoading: searchingUsers } = useSearchUsers(userSearchQuery);
   const createConversation = useCreateConversation();
+  const { data: isOwner } = useIsOwner();
+  const { data: isAdmin } = useIsAdmin();
+  const { toast } = useToast();
 
   const filteredConversations = conversations.filter((conv) => {
     if (!searchQuery.trim()) return true;
@@ -86,20 +100,39 @@ const ChatListView = ({
     if (createConversation.isPending) return;
     
     try {
+      console.log("Starting conversation with:", targetUser.id);
       const result = await createConversation.mutateAsync({
         participantIds: [targetUser.id],
         isGroup: false,
       });
       
+      console.log("Conversation created/found:", result);
+      
       if (result && result.id) {
-        // Close modal immediately
+        // Close modal first
         setShowNewChat(false);
         setUserSearchQuery("");
-        // Navigate to the conversation
-        onSelectChat(result.id);
+        
+        // Use setTimeout to ensure state updates before navigation
+        setTimeout(() => {
+          console.log("Navigating to conversation:", result.id);
+          onSelectChat(result.id);
+        }, 50);
+      } else {
+        console.error("No conversation ID returned");
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível abrir a conversa. Tente novamente.",
+        });
       }
     } catch (error) {
       console.error("Error creating conversation:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao iniciar conversa",
+        description: error instanceof Error ? error.message : "Tente novamente.",
+      });
     }
   };
 
@@ -258,6 +291,53 @@ const ChatListView = ({
                 <p className="text-sm text-muted-foreground">Explore ou crie comunidades</p>
               </div>
             </button>
+            <button
+              onClick={() => {
+                setShowNewChat(false);
+                setShowStatus(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-secondary transition-colors"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
+                <Eye className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold">Status</p>
+                <p className="text-sm text-muted-foreground">Veja e publique status</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                setShowNewChat(false);
+                setShowChannels(true);
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-secondary transition-colors"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
+                <Megaphone className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold">Canais</p>
+                <p className="text-sm text-muted-foreground">Siga canais de transmissão</p>
+              </div>
+            </button>
+            {(isOwner || isAdmin) && (
+              <button
+                onClick={() => {
+                  setShowNewChat(false);
+                  setShowAdmin(true);
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-secondary transition-colors"
+              >
+                <div className="w-12 h-12 rounded-2xl spyce-gradient flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold">Administração</p>
+                  <p className="text-sm text-muted-foreground">Gerenciar usuários e banimentos</p>
+                </div>
+              </button>
+            )}
           </div>
 
           <div className="p-4">
@@ -327,6 +407,27 @@ const ChatListView = ({
               onSelectChat(conversationId);
             }}
           />
+        </div>
+      )}
+
+      {/* Status View */}
+      {showStatus && (
+        <div className="absolute inset-0 z-50">
+          <StatusView onBack={() => setShowStatus(false)} />
+        </div>
+      )}
+
+      {/* Channels View */}
+      {showChannels && (
+        <div className="absolute inset-0 z-50">
+          <ChannelsView onBack={() => setShowChannels(false)} />
+        </div>
+      )}
+
+      {/* Admin Panel */}
+      {showAdmin && (
+        <div className="absolute inset-0 z-50">
+          <AdminPanel onBack={() => setShowAdmin(false)} />
         </div>
       )}
     </div>

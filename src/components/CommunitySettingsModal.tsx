@@ -18,7 +18,8 @@ import {
   Settings,
   Users,
   Plus,
-  MessageCircle
+  MessageCircle,
+  Link
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ import {
 import { useSearchUsers } from "@/hooks/useProfile";
 import { CommunityWithDetails, Profile, AppRole } from "@/types/chat";
 import { addDays, addHours } from "date-fns";
+import InviteLinkModal from "./InviteLinkModal";
 
 interface CommunitySettingsModalProps {
   community: CommunityWithDetails;
@@ -69,6 +71,7 @@ const CommunitySettingsModal = ({ community, onClose, onSelectGroup }: Community
   const [searchQuery, setSearchQuery] = useState("");
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDescription, setNewGroupDescription] = useState("");
   
@@ -454,14 +457,24 @@ const CommunitySettingsModal = ({ community, onClose, onSelectGroup }: Community
       {/* Actions */}
       <div className="p-4 border-b border-border space-y-2">
         {isModerator && (
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => setView("add-member")}
-          >
-            <UserPlus className="w-4 h-4" />
-            Adicionar Membro
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setView("add-member")}
+            >
+              <UserPlus className="w-4 h-4" />
+              Adicionar Membro
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setShowInviteModal(true)}
+            >
+              <Link className="w-4 h-4" />
+              Link de Convite
+            </Button>
+          </>
         )}
         
         {!isAdmin && (
@@ -632,6 +645,16 @@ const CommunitySettingsModal = ({ community, onClose, onSelectGroup }: Community
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invite Link Modal */}
+      <InviteLinkModal
+        open={showInviteModal}
+        onOpenChange={setShowInviteModal}
+        existingInviteCode={community.invite_code}
+        type="community"
+        targetId={community.id}
+        targetName={community.name}
+      />
     </div>
   );
 };
