@@ -14,7 +14,9 @@ import {
   Loader2,
   ShieldCheck,
   User,
-  Palette
+  Palette,
+  Link,
+  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,23 +38,27 @@ import {
 } from "@/hooks/useGroups";
 import { useSearchUsers } from "@/hooks/useProfile";
 import { useUpdateConversationTheme } from "@/hooks/useChat";
+import { useGenerateGroupInvite } from "@/hooks/useInvites";
 import { Profile } from "@/types/chat";
 import { cn } from "@/lib/utils";
 import { addDays, addHours } from "date-fns";
 import ThemePickerModal from "./ThemePickerModal";
 import { useToast } from "@/hooks/use-toast";
+import InviteLinkModal from "./InviteLinkModal";
 
 interface GroupSettingsModalProps {
   conversationId: string;
   groupName: string;
   themeColor?: string | null;
+  inviteCode?: string | null;
   onClose: () => void;
 }
 
-const GroupSettingsModal = ({ conversationId, groupName, themeColor, onClose }: GroupSettingsModalProps) => {
+const GroupSettingsModal = ({ conversationId, groupName, themeColor, inviteCode, onClose }: GroupSettingsModalProps) => {
   const [view, setView] = useState<"main" | "add-member">("main");
   const [searchQuery, setSearchQuery] = useState("");
   const [themePickerOpen, setThemePickerOpen] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -258,14 +264,24 @@ const GroupSettingsModal = ({ conversationId, groupName, themeColor, onClose }: 
       {/* Actions */}
       <div className="p-4 border-b border-border space-y-2">
         {isModerator && (
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => setView("add-member")}
-          >
-            <UserPlus className="w-4 h-4" />
-            Adicionar Membro
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setView("add-member")}
+            >
+              <UserPlus className="w-4 h-4" />
+              Adicionar Membro
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => setShowInviteModal(true)}
+            >
+              <Link className="w-4 h-4" />
+              Link de Convite
+            </Button>
+          </>
         )}
         <Button
           variant="outline"
@@ -394,6 +410,16 @@ const GroupSettingsModal = ({ conversationId, groupName, themeColor, onClose }: 
         currentColor={themeColor || null}
         onSelectColor={handleThemeSelect}
         title="Tema do Grupo"
+      />
+
+      {/* Invite Link Modal */}
+      <InviteLinkModal
+        open={showInviteModal}
+        onOpenChange={setShowInviteModal}
+        existingInviteCode={inviteCode}
+        type="group"
+        targetId={conversationId}
+        targetName={groupName}
       />
     </div>
   );

@@ -163,7 +163,6 @@ const AuthScreen = () => {
             />
           </div>
 
-          {/* CTA Buttons */}
           <div className="space-y-3 animate-slide-up" style={{ animationDelay: "0.1s" }}>
             <Button
               variant="spyce"
@@ -183,6 +182,11 @@ const AuthScreen = () => {
               Já tenho uma conta
             </Button>
           </div>
+
+          {/* Footer */}
+          <p className="text-center text-xs text-muted-foreground mt-6">
+            © 2025 From Spyce Inc. Todos os direitos reservados.
+          </p>
         </div>
       </div>
     );
@@ -311,6 +315,11 @@ const AuthScreen = () => {
             </button>
           </p>
         </div>
+        
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground mt-8">
+          © 2025 From Spyce Inc. Todos os direitos reservados.
+        </p>
       </div>
     </div>
   );
