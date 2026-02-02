@@ -100,26 +100,25 @@ const ChatListView = ({
     if (createConversation.isPending) return;
     
     try {
-      console.log("Starting conversation with:", targetUser.id);
       const result = await createConversation.mutateAsync({
         participantIds: [targetUser.id],
         isGroup: false,
       });
       
-      console.log("Conversation created/found:", result);
-      
       if (result && result.id) {
-        // Close modal first
+        // Close modal and clear search immediately
         setShowNewChat(false);
         setUserSearchQuery("");
         
-        // Use setTimeout to ensure state updates before navigation
-        setTimeout(() => {
-          console.log("Navigating to conversation:", result.id);
+        // Navigate to conversation directly - using requestAnimationFrame for reliability
+        requestAnimationFrame(() => {
           onSelectChat(result.id);
-        }, 50);
+          toast({
+            title: "Conversa aberta",
+            description: `Chat com ${targetUser.display_name || targetUser.username}`,
+          });
+        });
       } else {
-        console.error("No conversation ID returned");
         toast({
           variant: "destructive",
           title: "Erro",
