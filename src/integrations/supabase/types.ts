@@ -720,6 +720,10 @@ export type Database = {
         Returns: string
       }
       join_group_by_invite: { Args: { p_invite_code: string }; Returns: string }
+      user_is_participant: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "member" | "owner"
