@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_auto_replies: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          match_type: string
+          response_text: string
+          trigger_keyword: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          match_type?: string
+          response_text: string
+          trigger_keyword: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          match_type?: string
+          response_text?: string
+          trigger_keyword?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bot_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          last_used_at: string | null
+          name: string
+          pairing_code: string | null
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name?: string
+          pairing_code?: string | null
+          token?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+          name?: string
+          pairing_code?: string | null
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       channel_messages: {
         Row: {
           channel_id: string

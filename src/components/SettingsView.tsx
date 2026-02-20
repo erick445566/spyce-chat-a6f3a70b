@@ -15,6 +15,7 @@ import {
   Loader2,
   User,
   Headphones,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +28,7 @@ import BiometricLockModal from "@/components/BiometricLockModal";
 import HelpCenterModal from "@/components/HelpCenterModal";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import SupportTicketsModal from "@/components/SupportTicketsModal";
+import BotManagerModal from "@/components/BotManagerModal";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -49,6 +51,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode, forceMobile, onTog
   const [helpCenterOpen, setHelpCenterOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [supportTicketsOpen, setSupportTicketsOpen] = useState(false);
+  const [botManagerOpen, setBotManagerOpen] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -205,6 +208,16 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode, forceMobile, onTog
             />
           </SettingsGroup>
 
+          {/* Bots */}
+          <SettingsGroup title="Bots & Automações">
+            <SettingsItem
+              icon={<Bot className="w-5 h-5" />}
+              title="Gerenciar bots"
+              description="API externa, QR Code e auto-resposta"
+              onClick={() => setBotManagerOpen(true)}
+            />
+          </SettingsGroup>
+
           {/* Notifications */}
           <SettingsGroup title="Notificações">
             <SettingsToggle
@@ -274,6 +287,7 @@ const SettingsView = ({ onBack, isDarkMode, onToggleDarkMode, forceMobile, onTog
       <HelpCenterModal open={helpCenterOpen} onOpenChange={setHelpCenterOpen} />
       <ChangePasswordModal open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
       <SupportTicketsModal open={supportTicketsOpen} onOpenChange={setSupportTicketsOpen} />
+      <BotManagerModal open={botManagerOpen} onOpenChange={setBotManagerOpen} />
     </div>
   );
 };
